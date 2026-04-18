@@ -23,28 +23,37 @@ if not defined PYTHON_EXE (
 
 "%PYTHON_EXE%" "%~dp0fix_helper.py" >nul 2>nul
 
-"%PYTHON_EXE%" -c "import imouse" >nul 2>nul
+rem Ensure all runtime deps exist (imouse AND requests AND pillow - needed by online update and GUI)
+"%PYTHON_EXE%" -c "import imouse, requests, PIL" >nul 2>nul
 if %errorlevel% neq 0 (
     echo Installing packages...
-    "%PYTHON_EXE%" -m pip install --no-index --find-links="%~dp0packages" imouse-py openpyxl colorlog pydantic websocket-client requests pillow >nul 2>nul
+    "%PYTHON_EXE%" -m pip install --no-index --find-links="%~dp0packages" imouse-py openpyxl colorlog pydantic websocket-client requests pillow
     "%PYTHON_EXE%" "%~dp0fix_helper.py" >nul 2>nul
+    echo.
+    echo Verifying...
+    "%PYTHON_EXE%" -c "import imouse, requests, PIL" >nul 2>nul
+    if errorlevel 1 (
+        echo [Error] Package install failed. Trying online pip...
+        "%PYTHON_EXE%" -m pip install imouse-py openpyxl requests pillow
+    )
     echo Done.
     echo.
 )
 
-rem 应用更新：如果存在 _apply_update.bat，先执行它把 .new 文件覆盖原文件
+rem Apply deferred update if present (moves *.new over original files)
 if exist "%~dp0_apply_update.bat" (
     call "%~dp0_apply_update.bat"
     del /q "%~dp0_apply_update.bat" >nul 2>nul
 )
 
 "%PYTHON_EXE%" "%~dp0transfer_gui.py"
-if %errorlevel% neq 0 (
+set "EXITCODE=%errorlevel%"
+if not "%EXITCODE%"=="0" (
     echo.
-    echo [Error] Program error. See above.
+    echo [Error] transfer_gui.py exited with code %EXITCODE%. See above for details.
     goto :end
 )
-goto :eof
+goto :end
 
 :find_python
 set "PYTHON_EXE="
