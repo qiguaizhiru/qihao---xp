@@ -24,6 +24,12 @@ import json as _json
 import base64 as _base64
 
 try:
+    import requests  # 在线更新使用
+except ImportError:
+    messagebox.showerror("错误", "未找到 requests 模块，请先安装：pip install requests")
+    sys.exit(1)
+
+try:
     import imouse
 except ImportError:
     messagebox.showerror("错误", "未找到 imouse 模块，请先安装：pip install imouse-py")
