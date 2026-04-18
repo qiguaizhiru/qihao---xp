@@ -32,6 +32,12 @@ if %errorlevel% neq 0 (
     echo.
 )
 
+rem 应用更新：如果存在 _apply_update.bat，先执行它把 .new 文件覆盖原文件
+if exist "%~dp0_apply_update.bat" (
+    call "%~dp0_apply_update.bat"
+    del /q "%~dp0_apply_update.bat" >nul 2>nul
+)
+
 "%PYTHON_EXE%" "%~dp0transfer_gui.py"
 if %errorlevel% neq 0 (
     echo.
